@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch WebApi",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/WebApi/bin/Debug/net9.0/WebApi.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/WebApi",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5000",
+        "ConnectionStrings__Default": "Host=pgdb;Port=5432;Database=fase2;Username=postgres;Password=postgres;SSL Mode=Disable;Trust Server Certificate=true"
+      },
+      "justMyCode": true
+    }
+  ]
+}

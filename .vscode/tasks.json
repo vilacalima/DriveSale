@@ -1,0 +1,142 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/DriveSale.sln",
+        "--configuration",
+        "Debug"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch-webapi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/WebApi/WebApi.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "none",
+      "detail": "Hot reload da WebApi"
+    },
+    {
+      "label": "ef-database-update",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "ef",
+        "database",
+        "update",
+        "-p",
+        "${workspaceFolder}/src/Infrastructure",
+        "-s",
+        "${workspaceFolder}/src/WebApi"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ef-tool-install",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "tool",
+        "install",
+        "--global",
+        "dotnet-ef"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ef-migrations-add",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "ef",
+        "migrations",
+        "add",
+        "${input:migrationName}",
+        "-p",
+        "${workspaceFolder}/src/Infrastructure",
+        "-s",
+        "${workspaceFolder}/src/WebApi"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ef-add-and-update",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "ef-migrations-add",
+        "ef-database-update"
+      ]
+    },
+    {
+      "label": "compose-up",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/compose-up.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "compose-up-recreate",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/compose-up.ps1",
+        "-Recreate"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "compose-down",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/compose-down.ps1"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "compose-up-build",
+      "type": "process",
+      "command": "docker",
+      "args": [
+        "compose",
+        "up",
+        "-d",
+        "--build"
+      ],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationName",
+      "type": "promptString",
+      "description": "Nome da migration (ex.: InitialCreate)",
+      "default": "InitialCreate"
+    }
+  ]
+}

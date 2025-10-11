@@ -1,0 +1,57 @@
+name: drivesale
+services:
+  pgdb:
+    image: postgres:16
+    container_name: drivesale-pgdb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: fase2
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - fase2-net
+
+  adminer:
+    image: adminer:latest
+    container_name: drivesale-adminer
+    depends_on:
+      pgdb:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: pgdb
+    networks:
+      - fase2-net
+
+  api:
+    build:
+      context: .
+      dockerfile: src/WebApi/Dockerfile
+    container_name: drivesale-api
+    depends_on:
+      pgdb:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: "Host=pgdb;Port=5432;Database=fase2;Username=postgres;Password=postgres;SSL Mode=Disable;Trust Server Certificate=true"
+    ports:
+      - "8080:8080"
+    networks:
+      - fase2-net
+
+volumes:
+  pgdata:
+
+networks:
+  fase2-net:
+    driver: bridge

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drivesale-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fase2-api
+  template:
+    metadata:
+      labels:
+        app: drivesale-api
+    spec:
+      containers:
+        - name: api
+          image: yourregistry/drivesale-api:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: drivesale-api-config
+            - secretRef:
+                name: drivesale-api-secrets
+          env:
+            - name: ASPNETCORE_URLS
+              value: http://+:8080
+            - name: ConnectionStrings__Default
+              value: "Host=$(DB_HOST);Port=$(DB_PORT);Database=$(DB_NAME);Username=$(DB_USER);Password=$(DB_PASSWORD)"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
