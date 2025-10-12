@@ -8,6 +8,8 @@ public class Sale : EntityBase, IAggregateRoot
 {
     public Guid VehicleId { get; private set; }
     public Vehicle Vehicle { get; private set; } = default!;
+    public Guid ClientId { get; private set; }
+    public Client Client { get; private set; } = default!;
     public string BuyerCpf { get; private set; } = default!;
     public DateTime SaleDate { get; private set; } = DateTime.UtcNow;
     public decimal TotalPrice { get; private set; }
@@ -22,6 +24,22 @@ public class Sale : EntityBase, IAggregateRoot
         Vehicle = vehicle ?? throw new ArgumentNullException(nameof(vehicle));
         VehicleId = vehicle.Id;
         BuyerCpf = buyerCpf.Value;
+        SaleDate = DateTime.UtcNow;
+        TotalPrice = vehicle.Price;
+        Payment = new Payment(TotalPrice);
+        PaymentId = Payment.Id;
+    }
+
+    public Sale(Vehicle vehicle, Client client)
+    {
+        if (vehicle is null) throw new ArgumentNullException(nameof(vehicle));
+        if (client is null) throw new ArgumentNullException(nameof(client));
+
+        Vehicle = vehicle;
+        VehicleId = vehicle.Id;
+        Client = client;
+        ClientId = client.Id;
+        BuyerCpf = client.Cpf;
         SaleDate = DateTime.UtcNow;
         TotalPrice = vehicle.Price;
         Payment = new Payment(TotalPrice);
@@ -48,4 +66,3 @@ public class Sale : EntityBase, IAggregateRoot
         Touch();
     }
 }
-
