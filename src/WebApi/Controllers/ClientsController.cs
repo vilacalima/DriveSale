@@ -23,9 +23,9 @@ public class ClientsController : ControllerBase
             if (created is null) return Problem(detail: "Falha ao criar cliente", statusCode: 500);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException)
         {
-            return ValidationProblem(ex.Message);
+            return ValidationProblem("Dados invalidos");
         }
     }
 
@@ -41,9 +41,9 @@ public class ClientsController : ControllerBase
         {
             return NotFound();
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException)
         {
-            return ValidationProblem(ex.Message);
+            return ValidationProblem("Dados invalidos");
         }
     }
 

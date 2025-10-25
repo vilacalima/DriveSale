@@ -25,9 +25,9 @@ public class VehiclesController : ControllerBase
             var created = await _mediator.Send(new CreateVehicleCommand(dto.Brand, dto.Model, dto.Year, dto.Color, dto.Price), ct);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException)
         {
-            return ValidationProblem(ex.Message);
+            return ValidationProblem("Dados invalidos");
         }
     }
 
@@ -47,17 +47,17 @@ public class VehiclesController : ControllerBase
             await _mediator.Send(new UpdateVehicleCommand(id, dto.Brand, dto.Model, dto.Year, dto.Color, dto.Price), ct);
             return NoContent();
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
-            return Conflict(new { message = ex.Message });
+            return Conflict(new { message = "Nao e possivel editar veiculo vendido." });
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException)
         {
-            return ValidationProblem(ex.Message);
+            return ValidationProblem("Dados invalidos");
         }
     }
 

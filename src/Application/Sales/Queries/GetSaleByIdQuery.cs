@@ -1,25 +1,27 @@
 using Application.Common.Interfaces;
 using Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Sales.Queries;
 
 public record GetSaleByIdQuery(Guid Id) : IRequest<Sale?>;
 
-public class GetSaleByIdQueryHandler(ISaleRepository saleRepository) : IRequestHandler<GetSaleByIdQuery, Sale?>
+public class GetSaleByIdQueryHandler(ISaleRepository saleRepository, ILogger<GetSaleByIdQueryHandler> logger) : IRequestHandler<GetSaleByIdQuery, Sale?>
 {
     private readonly ISaleRepository _saleRepository = saleRepository;
+    private readonly ILogger<GetSaleByIdQueryHandler> _logger = logger;
 
     public Task<Sale?> Handle(GetSaleByIdQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            Console.WriteLine($"[GetSaleByIdQueryHandler][Handle] Get Sale by Id {request.Id}");
+            _logger.LogInformation("Get sale by Id {Id}", request.Id);
             return _saleRepository.GetByIdAsync(request.Id, cancellationToken);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[GetSaleByIdQueryHandler][Handle] Error on execute {ex.Message}");
+            _logger.LogError(ex, "Error getting sale by Id {Id}", request.Id);
             throw;
         }
     }

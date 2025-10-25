@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "8ou/C6EF0vc=",
+  "dgSpecHash": "BxhVMitXrHg=",
   "success": true,
   "projectFilePath": "C:\\Users\\robso\\workspace\\DriveSale\\src\\WebApi\\WebApi.csproj",
   "expectedPackageFiles": [
@@ -33,8 +33,10 @@
     {
       "code": "NU1603",
       "level": "Warning",
-      "warningLevel": 1,
       "message": "WebApi depends on Npgsql.EntityFrameworkCore.PostgreSQL (>= 8.0.7) but Npgsql.EntityFrameworkCore.PostgreSQL 8.0.7 was not found. Npgsql.EntityFrameworkCore.PostgreSQL 8.0.8 was resolved instead.",
+      "projectPath": "C:\\Users\\robso\\workspace\\DriveSale\\src\\WebApi\\WebApi.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\robso\\workspace\\DriveSale\\src\\WebApi\\WebApi.csproj",
       "libraryId": "Npgsql.EntityFrameworkCore.PostgreSQL",
       "targetGraphs": [
         "net9.0"

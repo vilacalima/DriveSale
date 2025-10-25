@@ -1,20 +1,22 @@
 using Application.Common.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Vehicles.Commands;
 
 public record UpdateVehicleCommand(Guid Id, string Brand, string Model, int Year, string Color, decimal Price) : IRequest<Unit>;
 
-public class UpdateVehicleCommandHandler(IVehicleRepository vehicleRepository, IUnitOfWork uow) : IRequestHandler<UpdateVehicleCommand, Unit>
+public class UpdateVehicleCommandHandler(IVehicleRepository vehicleRepository, IUnitOfWork uow, ILogger<UpdateVehicleCommandHandler> logger) : IRequestHandler<UpdateVehicleCommand, Unit>
 {
     private readonly IVehicleRepository _vehicleRepository = vehicleRepository;
     private readonly IUnitOfWork _uow = uow;
+    private readonly ILogger<UpdateVehicleCommandHandler> _logger = logger;
 
     public async Task<Unit> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            Console.WriteLine($"[UpdateVehicleCommandHandler][Handle] Update Vehicle {request}");
+            _logger.LogInformation("Update vehicle {Id}", request.Id);
             var entity = await _vehicleRepository.GetByIdAsync(request.Id, cancellationToken)
                                  ?? throw new KeyNotFoundException("Veículo não encontrado");
 
@@ -25,7 +27,7 @@ public class UpdateVehicleCommandHandler(IVehicleRepository vehicleRepository, I
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[UpdateVehicleCommandHandler][Handle] Error on execute {ex.Message}");
+            _logger.LogError(ex, "Error updating vehicle {Id}", request.Id);
             throw;
         }
     }
