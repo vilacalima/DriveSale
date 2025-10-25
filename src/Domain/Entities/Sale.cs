@@ -22,6 +22,8 @@ public class Sale : EntityBase, IAggregateRoot
     public Sale(Vehicle vehicle, Cpf buyerCpf)
     {
         Vehicle = vehicle ?? throw new ArgumentNullException(nameof(vehicle));
+        if (Vehicle.Status == VehicleStatus.Sold)
+            throw new InvalidOperationException("Veiculo ja vendido");
         VehicleId = vehicle.Id;
         BuyerCpf = buyerCpf.Value;
         SaleDate = DateTime.UtcNow;
@@ -36,6 +38,8 @@ public class Sale : EntityBase, IAggregateRoot
         if (client is null) throw new ArgumentNullException(nameof(client));
 
         Vehicle = vehicle;
+        if (Vehicle.Status == VehicleStatus.Sold)
+            throw new InvalidOperationException("Veiculo ja vendido");
         VehicleId = vehicle.Id;
         Client = client;
         ClientId = client.Id;

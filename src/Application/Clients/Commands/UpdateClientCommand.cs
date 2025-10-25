@@ -1,16 +1,18 @@
 using Application.Common.Interfaces;
 using Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Clients.Commands;
 
 public record UpdateClientCommand(Guid Id, string Name, string Email) : IRequest<Client?>;
 
-public class UpdateClientCommandHandler(IClientRepository clientRepository, IUnitOfWork uow)
+public class UpdateClientCommandHandler(IClientRepository clientRepository, IUnitOfWork uow, ILogger<UpdateClientCommandHandler> logger)
             : IRequestHandler<UpdateClientCommand, Client?>
 {
     private readonly IClientRepository _clientRepository = clientRepository;
     private readonly IUnitOfWork _uow = uow;
+    private readonly ILogger<UpdateClientCommandHandler> _logger = logger;
 
     public async Task<Client?> Handle(UpdateClientCommand request, CancellationToken cancellationToken)
     {
@@ -19,7 +21,7 @@ public class UpdateClientCommandHandler(IClientRepository clientRepository, IUni
 
         try
         {
-            Console.WriteLine($"[UpdateClientCommandHandler][Handle] Update client {request.Id}");
+            _logger.LogInformation("Update client {Id}", request.Id);
 
             entity.Update(request.Name, request.Email);
             _clientRepository.Update(entity);
@@ -28,7 +30,7 @@ public class UpdateClientCommandHandler(IClientRepository clientRepository, IUni
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[UpdateClientCommandHandler][Handle] Error on Execute {ex}");
+            _logger.LogError(ex, "Error updating client {Id}", request.Id);
             throw;
         }
     }
@@ -37,16 +39,15 @@ public class UpdateClientCommandHandler(IClientRepository clientRepository, IUni
     {
         try
         {
-            Console.WriteLine($"[UpdateClientCommandHandler][GetClientByIdAsync] Get client by Id {request.Id}");
+            _logger.LogInformation("Get client by Id {Id}", request.Id);
             return await _clientRepository.GetByIdAsync(request.Id, cancellationToken);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[UpdateClientCommandHandler][GetClientByIdAsync] Error on Execute {ex}");
+            _logger.LogError(ex, "Error getting client by Id {Id}", request.Id);
             throw;
         }
         
     }
 
 }
-

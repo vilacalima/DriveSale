@@ -151,6 +151,18 @@ Observacoes
 - Manifests em `k8s/`: `configmap.yaml`, `secret.yaml`, `deployment.yaml`, `service.yaml`.
 - Ajuste a imagem no Deployment antes de aplicar.
 
+## CI/CD (GitHub Actions)
+- Workflow: `.github/workflows/docker-publish.yml`
+- O pipeline compila e publica a imagem Docker nas seguintes situações:
+  - Push na branch `main`/`master` (gera a tag `latest` e tag de branch)
+  - Push de tags (`v*` ou `*.*.*`) — publica com o nome da tag
+  - Execução manual via `workflow_dispatch`
+- Configuração necessária no repositório (Settings → Secrets and variables → Actions):
+  - `DOCKERHUB_USERNAME`: seu usuário do Docker Hub
+  - `DOCKERHUB_TOKEN`: um Access Token do Docker Hub (ou sua senha — recomendado usar token)
+- A imagem publicada segue o padrão: `docker.io/<DOCKERHUB_USERNAME>/drivesale-api:<tag>`
+- O workflow usa `src/WebApi/Dockerfile` e cache de build do Docker para acelerar execuções.
+
 ## Solucao de problemas
 - 28P01 (senha invalida):
   - `compose-down` (remove volumes) + `compose-up-build` para recriar banco com a senha do compose
@@ -159,7 +171,58 @@ Observacoes
 - HTTPS no dev: projeto roda em HTTP no debug. Para HTTPS, gere/confie o certificado: `dotnet dev-certs https --trust`
 
 ## Arquitetura e Fluxo
-![Class Diagram](archive/ClassDiagram.png)
+![Class Diagram](docs/ClassDiagram.png)
+![architecture](docs/architecture.jpg)
+![architecture](docs/eks-deployment.jpg)
+
+## Arquitetura
+
+Visão geral (Clean Architecture)
+- Domain: núcleo de negócio (Entidades, Value Objects e regras). Sem dependências externas.
+- Application: orquestra casos de uso (MediatR Commands/Queries), validações de aplicação e portas (interfaces de Repositórios/UoW). Depende apenas de Domain.
+- Infrastructure: detalhes técnicos (EF Core, DbContext, Repositórios, Migrations, UnitOfWork). Implementa interfaces da Application.
+- WebApi: camada de entrada HTTP (Controllers, Swagger, DI, Health). Não contém regra de negócio.
+
+Padrões e decisões
+- MediatR para desacoplar Controllers de casos de uso (CQRS leve com Requests/Handlers).
+- Repositórios e UoW na Infrastructure para persistência via EF Core (PostgreSQL).
+- Value Object `Cpf` no domínio para garantir formato/validação.
+- Migrações aplicadas no startup (Database.Migrate) apenas para ambientes controlados; em produção, preferir migrações por pipeline.
+- Integração com pagamento via webhook idempotente. Envio de e‑mail não faz parte do escopo atual.
+
+Camadas e dependências (alto nível)
+- Usuário → WebApi (HTTP) → Application (Handlers)
+- Application → Domain (regras e entidades)
+- Application → Infrastructure (Repositórios/UoW) → Banco de Dados (EF Core)
+- Application → Serviço externo de Pagamento (webhook para atualização de status)
+
+Principais entidades e invariantes
+- Vehicle: só editável quando status = disponível; ao vender, muda para vendido.
+- Client: possui `Cpf` válido e e‑mail válido (campo de dados, sem envio).
+- Sale: criada apenas com Vehicle disponível; calcula/preenche preço total.
+- Payment: criado com Sale, inicia como pending; transita para paid/canceled via webhook.
+
+Fluxo de venda (exemplo)
+1) Criar `Client` e `Vehicle` via endpoints.
+2) Criar `Sale`: gera `Payment` em status pending e retorna `paymentCode`.
+3) Provedor de pagamento chama webhook: `/api/webhooks/payments/{paymentCode}` com `{ status: paid|canceled }`.
+4) Application valida e atualiza `Payment` e `Sale`; se `paid`, o `Vehicle` muda para vendido.
+5) Consultas: buscar `Sale` e listar `Vehicles` disponíveis/vendidos.
+
+Persistência e mapeamento
+- EF Core + Npgsql: `DbContext`, Configurations por entidade, Repositórios e UoW.
+- Migração inicial incluída em `src/Infrastructure/Migrations/`.
+
+Observabilidade e DX
+- Swagger/OpenAPI habilitado em dev e compose.
+- Health check simples em `/health`.
+
+## Deployment (EKS)
+- Recomendado: banco fora do cluster (RDS Postgres). A API recebe a connection string via Secret/ConfigMap e variáveis de ambiente no Deployment.
+- Tráfego: ALB (Ingress) → Service (ClusterIP) → Deployment/Pods.
+- Configuração: `ConfigMap` (não sensíveis) e `Secret` (credenciais); opcional, integração com Secrets Manager via External Secrets.
+- Se optar por banco no cluster (menos comum): use chart (Bitnami Postgres) com StatefulSet + PVC e exponha Service interno; cuidar de backup/upgrade.
+- Diagramas: `docs/architecture.drawio`, `docs/eks-deployment.drawio`.
 
 ## cURL/REST examples
 
